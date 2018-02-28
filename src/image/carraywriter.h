@@ -28,45 +28,23 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "imagewriterfactory.h"
-#include "image/builtinimagewriter.h"
-#include "image/targawriter.h"
-#include "image/carraywriter.h"
+#ifndef CARRAYWRITER_H
+#define CARRAYWRITER_H
 
-static AbstractImageWriter* PNG_img_writer(QObject* parent) {
-    return new BuiltinImageWriter("png","PNG",parent);
-}
-static AbstractImageWriter* png_img_writer(QObject* parent) {
-    return new BuiltinImageWriter("png","png",parent);
-}
+#include "../abstractimagewriter.h"
 
-static AbstractImageWriter* TGA_img_writer(QObject* parent) {
-    return new TargaImageWriter("TGA",parent);
-}
-static AbstractImageWriter* tga_img_writer(QObject* parent) {
-    return new TargaImageWriter("tga",parent);
-}
-static AbstractImageWriter* CA_img_writer(QObject* parent) {
-    return new CArrayImageWriter("c",parent);
-}
-
-ImageWriterFactory::ImageWriterFactory(QObject *parent) :
-    QObject(parent)
+class CArrayImageWriter : public AbstractImageWriter
 {
-    m_factorys["png"] = &png_img_writer;
-    m_factorys["PNG"] = &PNG_img_writer;
-    m_factorys["tga"] = &tga_img_writer;
-    m_factorys["TGA"] = &TGA_img_writer;
-    m_factorys["C"] = &CA_img_writer;
-}
+Q_OBJECT
+public:
+    CArrayImageWriter(QString ext,QObject *parent = 0);
 
-QStringList ImageWriterFactory::names() const {
-    return m_factorys.keys();
-}
+    virtual bool Export(QFile& file);
+    virtual QImage* reload(QFile& file);
+private:
+signals:
 
-AbstractImageWriter* ImageWriterFactory::build(const QString &name,QObject* parent) {
-    if (m_factorys.contains(name)) {
-        return m_factorys[name](parent);
-    }
-    return 0;
-}
+public slots:
+
+};
+#endif // CARRAYWRITER_H
