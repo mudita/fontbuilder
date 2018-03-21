@@ -63,7 +63,7 @@ bool CArrayImageWriter::Export(QFile& file) {
 
     out << QString("#include \"%1.h\"\n\n").arg(fno.baseName()).toUtf8();
 
-    out << QString("static const uint8_t font_data_%1[%2] = {\n").arg(fno.baseName()).arg(pixmap.height() * pixmap.width() / 2).toUtf8();
+    out << QString("static const uint8_t __attribute__((section(\".ExtFlash\"))) font_data_%1[%2] = {\n").arg(fno.baseName()).arg(pixmap.height() * pixmap.width() / 2).toUtf8();
 
     for (int y=0;y<pixmap.height();y++) {
         for (int x = 0; x < pixmap.width() * 4; x+=8)
