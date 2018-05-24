@@ -63,13 +63,16 @@ bool CArrayImageWriter::Export(QFile& file) {
 
     out << QString("#include \"%1.h\"\n\n").arg(fno.baseName()).toUtf8();
 
-    out << QString("static const uint8_t __attribute__((section(\".ExtFlash\"))) font_data_%1[%2] = {\n").arg(fno.baseName()).arg(pixmap.height() * pixmap.width() / 2).toUtf8();
+    out << QString("static const uint8_t __attribute__((section(\".ExtFlash\"))) font_data_%1[%2] = {\n").arg(fno.baseName()).arg(pixmap.height() * pixmap.width()).toUtf8();
 
-    for (int y=0;y<pixmap.height();y++) {
-        for (int x = 0; x < pixmap.width() * 4; x+=8)
+    for (int y=0; y<pixmap.height(); y++)
+    {
+        for (int x = 0; x < pixmap.width() ; x++)
         {
-            uint8_t val = ((pixmap.scanLine(y)[x+7] / 17) << 4) | (pixmap.scanLine(y)[x+3] / 17);
-            out << QString("0x%1, ").arg(val, 2, 16, QLatin1Char('0')).toUtf8();
+            uint8_t alfaChannel = qAlpha(pixmap.pixel(x, y));//(pixmap.scanLine(y)[x] / 17) << 4) | (pixmap.scanLine(y)[x+3] / 17);
+            // Scale the alfa channel to to for 1 bit color
+            uint8_t scaledValue = alfaChannel > 127 ? 0x00 : 0x0F;
+            out << QString("0x%1, ").arg(scaledValue, 2, 16, QLatin1Char('0')).toUtf8();
         }
         out << QString("\n");
     }
