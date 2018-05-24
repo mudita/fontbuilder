@@ -24,7 +24,7 @@ bool CArrayExporter::Export(QByteArray &out)
     out.append( QString("#ifndef ") + QString("%1%2_%3_H\n").arg(cfg->family()).arg(filename).arg(cfg->size()).toUpper().toUtf8());
     out.append( QString("#define ") + QString("%1%2_%3_H\n\n").arg(cfg->family()).arg(filename).arg(cfg->size()).toUpper().toUtf8());
 
-    out.append( QString("#include \"font.h\"\n\n").toUtf8());
+    out.append( QString("#include \"pf_gui_font.h\"\n\n").toUtf8());
 
 /*
  * struct font_info
