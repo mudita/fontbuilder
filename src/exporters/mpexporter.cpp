@@ -23,7 +23,10 @@ bool MPExporter::Export(QByteArray &out)
     gui_font_img_t font_img;
     memset(&font_img, 0, sizeof(gui_font_img_t));
 
-    std::string name = cfg->family().toStdString();
+    //name of the font
+    std::string name = cfg->family().toLower().toStdString()+
+        "_"+cfg->style().toLower().toStdString()+
+        "_"+std::to_string(cfg->size());
     if( name.length() > 64 )
         name = name.substr(0,63 );
     strncat(font_img.info.face, name.c_str(), 63);
@@ -71,6 +74,7 @@ bool MPExporter::Export(QByteArray &out)
 
     uint32_t offset = 0;
     uint32_t fsize = 0;
+    //this loop goes over all characters and writes to stream information about glyph's dimension and offset to pixmap data
     foreach(const Symbol& c , symbols()) {
         gui_font_glyph_t glyph;
 
@@ -97,6 +101,8 @@ bool MPExporter::Export(QByteArray &out)
 
     //setting up and writing kerning data for each glyph
     typedef QMap<uint,int>::ConstIterator Kerning;
+
+    //this loop goes over all characters and writes to stream information about kerning for each glyph
     foreach(const Symbol& c , symbols())
     {
         gui_font_kerning_t kern;
@@ -114,6 +120,7 @@ bool MPExporter::Export(QByteArray &out)
         }  
     }
 
+    //writes to file temporary data about location of each glyph in the pixmap
     foreach(const Symbol& c , symbols()) {
         pixmap_coords_t coord;
 

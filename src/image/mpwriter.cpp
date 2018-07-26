@@ -28,6 +28,7 @@ bool MPImageWriter::Export(QFile& file)
     file.read( reinterpret_cast<char*>(&font), sizeof(gui_font_img_t));
 
     std::vector<gui_font_glyph_t> font_glyphs;
+    //loads from file information about glyphs
     for( uint32_t i=0; i<font.glyph_count; ++i )
     {
         gui_font_glyph_t glyph;
@@ -38,7 +39,7 @@ bool MPImageWriter::Export(QFile& file)
     //move file pointer back to the end
     file.seek(font.image_data_offset);
 
-    //load all locations of glyphs from file
+    //loads from file location of glyphs in the pixmap
     std::vector<pixmap_coords_t> pixmap_coords;
     for( uint32_t i = 0; i< font.glyph_count; i++ ){
         pixmap_coords_t coords;
@@ -52,6 +53,7 @@ bool MPImageWriter::Export(QFile& file)
     QImage pixmap = buildImage();
 
     QDataStream out(&file);
+    //for all glyphs go over each line of the glyph, get pixel from the pixmap and save truncuated value to the file.
     for( uint32_t i=0; i<font_glyphs.size(); ++i)
     {
         gui_font_glyph_t glyph = font_glyphs[i];

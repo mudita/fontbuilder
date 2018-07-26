@@ -297,7 +297,7 @@ void FontBuilder::doExport(bool x2) {
         {
             QString filename;
             QFile file;
-            ////////////////////////////////////////////////
+
             AbstractExporter* descExporter = m_exporter_factory->build(m_output_config->descriptionFormat(),this);
             if (!descExporter) {
                 QMessageBox msgBox;
@@ -330,9 +330,6 @@ void FontBuilder::doExport(bool x2) {
                  }
              }
 
-            /////////////////////////////////////////////
-            /// \brief imgExporter
-            ///
             AbstractImageWriter* imgExporter = m_image_writer_factory->build(m_output_config->imageFormat(),this);
             if (!imgExporter) {
                 QMessageBox msgBox;
@@ -354,7 +351,8 @@ void FontBuilder::doExport(bool x2) {
                 msgBox.setText(tr("Error on save image :\n")+imgExporter->errorString()+"\nFile not writed.");
                 msgBox.exec();
             }
-            file.close();
+            file.close();                        
+
             m_image_writer = imgExporter;
             m_image_writer->watch(filename);
             connect(m_image_writer,SIGNAL(imageChanged(QString)),this,SLOT(onExternalImageChanged(QString)));
