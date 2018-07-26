@@ -44,6 +44,7 @@ extern AbstractExporter* BMFontExporterFactoryFunc (QObject*);
 extern AbstractExporter* AGEExporterFactoryFunc (QObject*);
 extern AbstractExporter* JSONFontExporterFactoryFunc (QObject*);
 extern AbstractExporter* CArrayExporterFactoryFunc (QObject*);
+extern AbstractExporter* MPExporterFactoryFunc (QObject*);
 
 ExporterFactory::ExporterFactory(QObject *parent) :
     QObject(parent)
@@ -61,6 +62,7 @@ ExporterFactory::ExporterFactory(QObject *parent) :
     m_factorys["AGE"] = &AGEExporterFactoryFunc;
     m_factorys["JSON"] = &JSONFontExporterFactoryFunc;
     m_factorys["C array"] = &CArrayExporterFactoryFunc;
+    m_factorys["Mudita Pure"] = &MPExporterFactoryFunc;
 }
 
 
