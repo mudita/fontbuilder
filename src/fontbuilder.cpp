@@ -54,7 +54,7 @@
 FontBuilder::FontBuilder(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::FontBuilder),
-    m_image_writer(0)
+    m_image_writer(nullptr)
 {
     ui->setupUi(this);
 
@@ -74,7 +74,7 @@ FontBuilder::FontBuilder(QWidget *parent) :
 
     connect(m_layout_data,SIGNAL(layoutChanged()),this,SLOT(onLayoutChanged()));
 
-    m_layouter = 0;
+    m_layouter = nullptr;
     m_layouter_factory = new LayouterFactory(this);
 
     bool b = ui->comboBoxLayouter->blockSignals(true);
@@ -201,7 +201,7 @@ void FontBuilder::on_comboBoxLayouter_currentIndexChanged(QString name)
     if (name.isEmpty()) return;
     if (m_layouter) {
         delete m_layouter;
-        m_layouter = 0;
+        m_layouter = nullptr;
     }
     m_layouter = m_layouter_factory->build(name,this);
     if (m_layouter) {
@@ -268,10 +268,102 @@ void FontBuilder::onFontNameChanged() {
 void FontBuilder::doExport(bool x2) {
     QDir dir(m_output_config->path());
     QString texture_filename;
-    setLayoutImage(m_layout_data->image());
+    setLayoutImage(m_layout_data->image());  
+
     if (m_output_config->writeImage()) {
         delete m_image_writer;
-        m_image_writer = 0;
+        m_image_writer = nullptr;
+
+        //mudita pure must be selected in both image format and description format
+        if( m_output_config->imageFormat().compare("Mudita Pure") == 0 &&
+            m_output_config->descriptionFormat().compare("Mudita Pure") != 0 )
+        {
+            QMessageBox msgBox;
+            msgBox.setText(tr("Error ")+m_output_config->descriptionFormat()+ " selected. Must be "+m_output_config->imageFormat());
+            msgBox.exec();
+            return;
+        }
+        if( m_output_config->imageFormat().compare("Mudita Pure") != 0 &&
+            m_output_config->descriptionFormat().compare("Mudita Pure") == 0 )
+        {
+            QMessageBox msgBox;
+            msgBox.setText(tr("Error ")+m_output_config->imageFormat()+ " selected. Must be "+m_output_config->descriptionFormat());
+            msgBox.exec();
+            return;
+        }
+        //both description and image formats are Mudita Pure
+        if( m_output_config->imageFormat().compare("Mudita Pure") == 0 &&
+            m_output_config->descriptionFormat().compare("Mudita Pure") == 0)
+        {
+            QString filename;
+            QFile file;
+            ////////////////////////////////////////////////
+            AbstractExporter* descExporter = m_exporter_factory->build(m_output_config->descriptionFormat(),this);
+            if (!descExporter) {
+                QMessageBox msgBox;
+                msgBox.setText(tr("Unknown exporter :")+m_output_config->descriptionFormat());
+                msgBox.exec();
+                return;
+            }
+            descExporter->setFace(m_font_renderer->face());
+            descExporter->setFontConfig(m_font_config,m_layout_config);
+            descExporter->setData(m_layout_data,m_font_renderer->data());
+            descExporter->setTextureFilename(texture_filename);
+            descExporter->setScale(m_font_renderer->scale());
+
+            QByteArray data;
+            if (!descExporter->Write(data)) {
+                 QMessageBox msgBox;
+                 msgBox.setText(tr("Error on save description :\n")+descExporter->getErrorString()+"\nFile not writed.");
+                 msgBox.exec();
+             } else {
+                filename = m_output_config->imageName();
+                filename+="."+descExporter->getExtension();
+                filename = dir.filePath(filename);
+                 file.setFileName(filename);
+                 if (file.open(QIODevice::ReadWrite)) {
+                     file.write(data);
+                 } else {
+                     QMessageBox msgBox;
+                     msgBox.setText(tr("Failed to open file:\n")+filename);
+                     msgBox.exec();
+                 }
+             }
+
+            /////////////////////////////////////////////
+            /// \brief imgExporter
+            ///
+            AbstractImageWriter* imgExporter = m_image_writer_factory->build(m_output_config->imageFormat(),this);
+            if (!imgExporter) {
+                QMessageBox msgBox;
+                msgBox.setText(tr("Unknown exporter :")+m_output_config->descriptionFormat());
+                msgBox.exec();
+                return;
+            }
+
+            imgExporter->setData(m_layout_data,m_layout_config,m_font_renderer->data());
+            texture_filename = m_output_config->imageName();
+            if (x2) {
+                texture_filename += "_x2";
+            }
+            texture_filename+="."+imgExporter->extension();
+             filename = dir.filePath(texture_filename);
+
+            if (!imgExporter->Write(file)) {
+                QMessageBox msgBox;
+                msgBox.setText(tr("Error on save image :\n")+imgExporter->errorString()+"\nFile not writed.");
+                msgBox.exec();
+            }
+            file.close();
+            m_image_writer = imgExporter;
+            m_image_writer->watch(filename);
+            connect(m_image_writer,SIGNAL(imageChanged(QString)),this,SLOT(onExternalImageChanged(QString)));
+
+            delete descExporter;
+
+            return;
+        }
+
         AbstractImageWriter* exporter = m_image_writer_factory->build(m_output_config->imageFormat(),this);
         if (!exporter) {
             QMessageBox msgBox;

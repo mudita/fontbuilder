@@ -32,6 +32,7 @@
 #include "image/builtinimagewriter.h"
 #include "image/targawriter.h"
 #include "image/carraywriter.h"
+#include "image/mpwriter.h"
 
 static AbstractImageWriter* PNG_img_writer(QObject* parent) {
     return new BuiltinImageWriter("png","PNG",parent);
@@ -50,6 +51,10 @@ static AbstractImageWriter* CA_img_writer(QObject* parent) {
     return new CArrayImageWriter("c",parent);
 }
 
+static AbstractImageWriter* MP_img_writer(QObject* parent) {
+    return new MPImageWriter("mpf",parent);
+}
+
 ImageWriterFactory::ImageWriterFactory(QObject *parent) :
     QObject(parent)
 {
@@ -58,6 +63,7 @@ ImageWriterFactory::ImageWriterFactory(QObject *parent) :
     m_factorys["tga"] = &tga_img_writer;
     m_factorys["TGA"] = &TGA_img_writer;
     m_factorys["C"] = &CA_img_writer;
+    m_factorys["Mudita Pure"] = &MP_img_writer;
 }
 
 QStringList ImageWriterFactory::names() const {

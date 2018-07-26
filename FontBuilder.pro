@@ -76,7 +76,9 @@ SOURCES += src/main.cpp \
     src/exporters/ageexporter.cpp \
     src/exporters/jsonfontexporter.cpp \
     src/exporters/carrayexporter.cpp \
-    src/image/carraywriter.cpp
+    src/image/carraywriter.cpp \
+    src/exporters/mpexporter.cpp \
+    src/image/mpwriter.cpp
 
 HEADERS += src/fontbuilder.h \
     src/colorbutton.h \
@@ -123,7 +125,10 @@ HEADERS += src/fontbuilder.h \
     src/exporters/ageexporter.h \
     src/exporters/jsonfontexporter.h \
     src/exporters/carrayexporter.h \
-    src/image/carraywriter.h
+    src/image/carraywriter.h \
+    src/image/mpwriter.h \
+    src/exporters/mpexporter.h \
+    src/mpcommon.h
 
 FORMS += src/fontbuilder.ui \
     src/fontselectframe.ui \
