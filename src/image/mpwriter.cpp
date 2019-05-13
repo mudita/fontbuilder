@@ -24,15 +24,17 @@ bool MPImageWriter::Export(QFile& file)
     file.seek(0);
 
     //read the header of the file
-    gui_font_img_t font;
-    file.read( reinterpret_cast<char*>(&font), sizeof(gui_font_img_t));
+    Font font;
+    font.load( file );
+//    file.read( reinterpret_cast<char*>(&font), sizeof(gui_font_img_t));
 
-    std::vector<gui_font_glyph_t> font_glyphs;
+    std::vector<FontGlyph> font_glyphs;
     //loads from file information about glyphs
     for( uint32_t i=0; i<font.glyph_count; ++i )
     {
-        gui_font_glyph_t glyph;
-        file.read( reinterpret_cast<char*>(&glyph), sizeof(gui_font_glyph_t));
+        FontGlyph glyph;
+        glyph.load( file );
+//        file.read( reinterpret_cast<char*>(&glyph), sizeof(gui_font_glyph_t));
         font_glyphs.push_back(glyph);
     }
 
@@ -54,9 +56,11 @@ bool MPImageWriter::Export(QFile& file)
 
     QDataStream out(&file);
     //for all glyphs go over each line of the glyph, get pixel from the pixmap and save truncuated value to the file.
+
+    std::cout<<std::endl;
     for( uint32_t i=0; i<font_glyphs.size(); ++i)
     {
-        gui_font_glyph_t glyph = font_glyphs[i];
+        FontGlyph glyph = font_glyphs[i];
         for (int y=0; y<glyph.height; y++)
         {
             for (int x = 0; x < glyph.width; x++)
@@ -65,8 +69,14 @@ bool MPImageWriter::Export(QFile& file)
                 // Scale the alfa channel to to for 1 bit color
                 uint8_t scaledValue = alfaChannel > 127 ? 0x00 : 0x0F;
                 out.writeRawData( reinterpret_cast<char*>(&scaledValue), 1 );
+//                if( scaledValue == 15 )
+//                    std::cout<<"_";
+//                else
+//                    std::cout<<"X";
             }
+            std::cout<<std::endl;
         }
+        std::cout<<std::endl;
     }
 
     return true;
