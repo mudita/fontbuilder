@@ -1,10 +1,13 @@
 #ifndef MPCOMMON_H
 #define MPCOMMON_H
 
+#include <QByteArray>
+#include <QFile>
 #include <stdint.h>
 
-typedef struct
+class FontGlyph
 {
+public:
     //character id
     uint16_t id;
     //offset in glyph data field
@@ -19,20 +22,62 @@ typedef struct
     int16_t yofset;
     //how much the current position should be advanced after drawing the character
     uint16_t xadvance;
-}gui_font_glyph_t;
 
-typedef struct
+    void load( QFile& file) {
+        file.read( reinterpret_cast<char*>(&id), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&glyph_offset), sizeof(uint32_t));
+        file.read( reinterpret_cast<char*>(&width), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&height), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&xoffset), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&yofset), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&xadvance), sizeof(uint16_t));
+    }
+
+    void save( QByteArray& out ) {
+        out.append( reinterpret_cast<char*>(&id), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&glyph_offset), sizeof(uint32_t));
+        out.append( reinterpret_cast<char*>(&width), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&height), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&xoffset), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&yofset), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&xadvance), sizeof(uint16_t));
+    }
+
+    static uint32_t getSize() {
+        return 4*sizeof (uint16_t) + 2*sizeof (int16_t) + sizeof(uint32_t);
+    }
+};
+
+class FontKerning
 {
+public:
     //utf16 id of the first character
     uint16_t first;
     //utf16 id of the following character
     uint16_t second;
     //distance in pixels between beginning of first character and beginning of second character
     int16_t amount;
-} gui_font_kerning_t;
 
-typedef struct
+    void load( QFile& file) {
+        file.read( reinterpret_cast<char*>(&first), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&second), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&amount), sizeof(uint16_t));
+    }
+
+    void save( QByteArray& out ) {
+        out.append( reinterpret_cast<char*>(&first), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&second), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&amount), sizeof(int16_t));
+    }
+
+    static uint32_t getSize() {
+        return 3*sizeof (uint16_t);
+    }
+};
+
+class FontInfo
 {
+public:
     //name of the true type font. max 63 characters
     char face[64];
     //size of the true type font
@@ -56,12 +101,44 @@ typedef struct
     //height of the texture, normally used to scale the y pos of the character image
     uint16_t scale_h;
 
-}gui_font_info_t;
+    void save( QByteArray& out ) {
+        out.append( reinterpret_cast<char*>(face), sizeof(face));
+        out.append( reinterpret_cast<char*>(&size), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&bold), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&italic), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&smooth), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&char_spacing), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&line_spacing), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&line_height), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&base), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&scale_w), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&scale_h), sizeof(uint16_t));
+    }
 
-typedef struct
+    void load( QFile& file) {
+        file.read( reinterpret_cast<char*>(face), sizeof(face));
+        file.read( reinterpret_cast<char*>(&size), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&bold), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&italic), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&smooth), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&char_spacing), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&line_spacing), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&line_height), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&base), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&scale_w), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&scale_h), sizeof(uint16_t));
+    }
+
+    static uint32_t getSize() {
+        return sizeof(face) + 10*sizeof (uint16_t);
+    }
+};
+
+class Font
 {
+public:
     //structure holding detailed information about font
-    gui_font_info_t info;
+    FontInfo info;
     //number of glyphs in the font
     uint32_t glyph_count;
     //offset to the beginning of the glyph data
@@ -72,7 +149,29 @@ typedef struct
     uint32_t kern_data_offset;
     //offset to the beginning of the image data
     uint32_t image_data_offset;
-} gui_font_img_t;
+
+    void save( QByteArray& out ) {
+        info.save(out);
+        out.append( reinterpret_cast<char*>(&glyph_count), sizeof(uint32_t));
+        out.append( reinterpret_cast<char*>(&glyph_data_offset), sizeof(uint32_t));
+        out.append( reinterpret_cast<char*>(&kern_count), sizeof(uint32_t));
+        out.append( reinterpret_cast<char*>(&kern_data_offset), sizeof(uint32_t));
+        out.append( reinterpret_cast<char*>(&image_data_offset), sizeof(uint32_t));
+    }
+
+    void load( QFile& file) {
+        info.load( file );
+        file.read( reinterpret_cast<char*>(&glyph_count), sizeof(uint32_t));
+        file.read( reinterpret_cast<char*>(&glyph_data_offset), sizeof(uint32_t));
+        file.read( reinterpret_cast<char*>(&kern_count), sizeof(uint32_t));
+        file.read( reinterpret_cast<char*>(&kern_data_offset), sizeof(uint32_t));
+        file.read( reinterpret_cast<char*>(&image_data_offset), sizeof(uint32_t));
+    }
+
+    static uint32_t getSize() {
+        return FontInfo::getSize() + 5*sizeof (uint32_t);
+    }
+};
 
 //this data is to be overwrittne by font's glyphs. It contains x and y coordinates of the following glyphs
 typedef struct {

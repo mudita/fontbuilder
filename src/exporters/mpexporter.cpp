@@ -20,13 +20,15 @@ bool MPExporter::Export(QByteArray &out)
 
     const FontConfig* cfg = fontConfig();
 
-    gui_font_img_t font_img;
-    memset(&font_img, 0, sizeof(gui_font_img_t));
+    Font font_img;
+    memset( font_img.info.face, 0, sizeof(font_img.info.face));
+//    memset(&font_img, 0, sizeof(gui_font_img_t));
 
     //name of the font
     std::string name = cfg->family().toLower().toStdString()+
         "_"+cfg->style().toLower().toStdString()+
         "_"+std::to_string(cfg->size());
+    std::replace( name.begin(), name.end(), ' ', '_');
     if( name.length() > 64 )
         name = name.substr(0,63 );
     strncat(font_img.info.face, name.c_str(), 63);
@@ -54,20 +56,22 @@ bool MPExporter::Export(QByteArray &out)
     //number of glyphs in the font
     font_img.glyph_count = static_cast<uint32_t>(symbols().size());
     //offset to the beginning of the glyph data
-    font_img.glyph_data_offset = sizeof(gui_font_img_t);
+    font_img.glyph_data_offset = font_img.getSize();
+
     //number of kerning pairs
     font_img.kern_count = 0;
     foreach(const Symbol& c , symbols()) {
         font_img.kern_count += static_cast<uint16_t>(c.kerning.size());
     }
     //array of glyphs structures
-    font_img.kern_data_offset = sizeof(gui_font_img_t) + font_img.glyph_count * sizeof (gui_font_glyph_t);
+    font_img.kern_data_offset = font_img.getSize() + font_img.glyph_count * FontGlyph::getSize();
     //offset to the beginning of the image data
-    font_img.image_data_offset = font_img.kern_data_offset + font_img.kern_count * sizeof (gui_font_kerning_t);
+    font_img.image_data_offset = font_img.kern_data_offset + font_img.kern_count * FontKerning::getSize();
 
     //writing font header
-    char* font_img_ptr = reinterpret_cast<char*>(&font_img);
-    out.append(QByteArray::fromRawData( font_img_ptr, sizeof(gui_font_img_t)));
+    font_img.save( out );
+    //char* font_img_ptr = reinterpret_cast<char*>(&font_img);
+    //out.append(QByteArray::fromRawData( font_img_ptr, sizeof(gui_font_img_t)));
 
     //setting up glyph structures and byte array for image data
     QByteArray imgArray;
@@ -76,12 +80,12 @@ bool MPExporter::Export(QByteArray &out)
     uint32_t fsize = 0;
     //this loop goes over all characters and writes to stream information about glyph's dimension and offset to pixmap data
     foreach(const Symbol& c , symbols()) {
-        gui_font_glyph_t glyph;
+        FontGlyph glyph;
 
         //character id
         glyph.id = static_cast<uint16_t>(c.id);
         //offset in glyph data field
-        glyph.glyph_offset = static_cast<uint32_t>(imgArray.length())+offset;
+        glyph.glyph_offset = font_img.image_data_offset+offset;
         //width of the character image in the texture
         glyph.width = static_cast<uint16_t>(c.placeW);
         //height of the character image in the texture
@@ -95,8 +99,9 @@ bool MPExporter::Export(QByteArray &out)
         offset += glyph.width * glyph.height;
 
         fsize+= glyph.width *  glyph.height;
-        char* glyph_ptr = reinterpret_cast<char*>(&glyph);
-        out.append(QByteArray::fromRawData( glyph_ptr, sizeof(gui_font_glyph_t)));
+        glyph.save( out );
+        //char* glyph_ptr = reinterpret_cast<char*>(&glyph);
+        //out.append(QByteArray::fromRawData( glyph_ptr, sizeof(gui_font_glyph_t)));
     }
 
     //setting up and writing kerning data for each glyph
@@ -105,7 +110,7 @@ bool MPExporter::Export(QByteArray &out)
     //this loop goes over all characters and writes to stream information about kerning for each glyph
     foreach(const Symbol& c , symbols())
     {
-        gui_font_kerning_t kern;
+        FontKerning kern;
         for (Kerning k = c.kerning.begin(); k != c.kerning.end(); k++)
         {
             //utf16 id of the first character
@@ -115,8 +120,9 @@ bool MPExporter::Export(QByteArray &out)
             //distance in pixels between beginning of first character and beginning of second character
             kern.amount = static_cast<int16_t>(k.value());
             //write to file
-            char* kern_ptr = reinterpret_cast<char*>(&kern);
-            out.append(QByteArray::fromRawData( kern_ptr, sizeof(gui_font_kerning_t)));
+            kern.save( out );
+            //char* kern_ptr = reinterpret_cast<char*>(&kern);
+            //out.append(QByteArray::fromRawData( kern_ptr, sizeof(gui_font_kerning_t)));
         }  
     }
 
