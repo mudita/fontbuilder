@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>474</width>
-    <height>361</height>
+    <height>366</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -20,7 +20,16 @@
    <string>Frame</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0">
-   <property name="margin">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
     <number>0</number>
    </property>
    <item>
@@ -39,8 +48,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>470</width>
-        <height>144</height>
+        <width>472</width>
+        <height>130</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout">
