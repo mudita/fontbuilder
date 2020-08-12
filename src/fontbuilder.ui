@@ -143,6 +143,13 @@
          <widget class="OutputFrame" name="frameOutput" native="true"/>
         </item>
         <item>
+         <widget class="QPushButton" name="pushButtonImportJson">
+          <property name="text">
+           <string>Generate fonts from .json file</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="pushButtonWriteFont">
           <property name="text">
            <string>Write font</string>
@@ -333,6 +340,11 @@
   <action name="action_Open">
    <property name="text">
     <string>&amp;Open</string>
+   </property>
+  </action>
+  <action name="actionImport_from_json">
+   <property name="text">
+    <string>Import from .json</string>
    </property>
   </action>
  </widget>

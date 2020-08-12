@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2010-2010 Andrey AndryBlack Kunitsyn
  * email:support.andryblack@gmail.com
  *
@@ -28,8 +28,6 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "fontbuilder.h"
-#include "ui_fontbuilder.h"
 #include <QDebug>
 #include <QPainter>
 #include <QPixmap>
@@ -39,7 +37,14 @@
 #include <QDir>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QFile>
+#include <QJsonParseError>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 
+#include "fontbuilder.h"
+#include "ui_fontbuilder.h"
 #include "fontconfig.h"
 #include "fontrenderer.h"
 #include "layoutconfig.h"
@@ -490,4 +495,102 @@ void FontBuilder::on_action_Open_triggered()
     }
 
 
+}
+
+void FontBuilder::on_pushButtonImportJson_clicked()
+{
+    if( m_output_config->imageFormat().compare("Mudita Pure") != 0 ||
+             m_output_config->descriptionFormat().compare("Mudita Pure") != 0 )
+    {
+        QMessageBox msgBox;
+        msgBox.setText(tr("Error ")+". Must be Mudita Pure both description and image format!");
+        msgBox.exec();
+        return;
+    }
+    else {
+        QString file_path = QFileDialog::getOpenFileName(this, "Open a file", QDir::homePath(), "JSON File (*.json)");
+        QFile inFile(file_path);
+        inFile.open(QIODevice::ReadOnly|QIODevice::Text);
+        QByteArray data = inFile.readAll();
+        inFile.close();
+
+        QJsonParseError errorPtr;
+        QJsonDocument doc = QJsonDocument::fromJson(data, &errorPtr);
+        if(doc.isNull()) {
+            qDebug() << "Failed to load file";
+        }
+        QJsonObject obj = doc.object();
+        QVector<QPointF> listOfSettings;
+
+        QJsonArray settingArray = obj.value("fonts").toArray();
+        foreach(const QJsonValue & val, settingArray) {
+            QString font_file = val.toObject().value("font-file").toString();
+            QString font = val.toObject().value("font").toString();
+            QString style = val.toObject().value("style").toString();
+            int size = val.toObject().value("size").toInt();
+            int dpi = val.toObject().value("DPI").toInt();
+            int bold = val.toObject().value("bold").toInt();
+            int italic = val.toObject().value("italic").toInt();
+            float scale_width = val.toObject().value("scale_width").toInt();
+            float scale_height = val.toObject().value("scale_height").toInt();
+            int spacing_char = val.toObject().value("spacing_char").toInt();
+            int spacing_line = val.toObject().value("spacing_line").toInt();
+            bool smoothing = val.toObject().value("smoothing").toBool();
+            QString smoothing_option = val.toObject().value("smoothing_option").toString();
+            QString hinting_option = val.toObject().value("hinting_option").toString();
+            int padding_top = val.toObject().value("padding_top").toInt();
+            int padding_bottom = val.toObject().value("padding_bottom").toInt();
+            int padding_left = val.toObject().value("padding_left").toInt();
+            int padding_right = val.toObject().value("padding_right").toInt();
+            if (m_font_config) {
+                m_font_config->setFilename(font_file);
+                m_font_config->setStyle(style);
+                m_font_config->setSize(size);
+                m_font_config->setDPI(dpi);
+                m_font_config->setBold(bold);
+                m_font_config->setItalic(italic);
+                m_font_config->setWidth(scale_width);
+                m_font_config->setHeight(scale_height);
+                m_font_config->setCharSpacing(spacing_char);
+                m_font_config->setLineSpacing(spacing_line);
+                m_font_config->setAntialiased(smoothing);
+                if(QString::compare(smoothing_option, "Light", Qt::CaseInsensitive) == 0) {
+                    m_font_config->setAntiAliasing(static_cast<FontConfig::AAMethod>(1));
+                }
+                else if(QString::compare(smoothing_option, "LCD horizontal", Qt::CaseInsensitive) == 0) {
+                    m_font_config->setAntiAliasing(static_cast<FontConfig::AAMethod>(2));
+                }
+                else if(QString::compare(smoothing_option, "LCD vertical", Qt::CaseInsensitive) == 0) {
+                    m_font_config->setAntiAliasing(static_cast<FontConfig::AAMethod>(3));
+                }
+                else {
+                    m_font_config->setAntiAliasing(static_cast<FontConfig::AAMethod>(0)); // standard-grayscale
+                }
+                if(QString::compare(hinting_option, "Default", Qt::CaseInsensitive) == 0) {
+                    m_font_config->setHinting(static_cast<FontConfig::HintingMethod>(1));
+                }
+                else if(QString::compare(hinting_option, "ForceFreetypeAutohinting", Qt::CaseInsensitive) == 0) {
+                    m_font_config->setHinting(static_cast<FontConfig::HintingMethod>(2));
+                }
+                else if(QString::compare(hinting_option, "DisableFreetypeAutohinting", Qt::CaseInsensitive) == 0) {
+                    m_font_config->setHinting(static_cast<FontConfig::HintingMethod>(3));
+                }
+                else {
+                    m_font_config->setHinting(static_cast<FontConfig::HintingMethod>(0)); // disabled
+                }
+            }
+            if(m_layout_config) {
+                m_layout_config->setOffsetTop(padding_top);
+                m_layout_config->setOffsetLeft(padding_left);
+                m_layout_config->setOffsetBottom(padding_bottom);
+                m_layout_config->setOffsetRight(padding_right);
+            }
+            doExport(false);
+            if (m_output_config->generateX2()) {
+                m_font_renderer->render(2.0f);
+                doExport(true);
+                m_font_renderer->render(1.0f);
+            }
+        }
+    }
 }
