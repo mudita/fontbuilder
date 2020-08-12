@@ -96,6 +96,7 @@ private slots:
     void onSpacingChanged();
     void on_comboBox_currentIndexChanged(int index);
     void on_action_Open_triggered();
+    void on_pushButtonImportJson_clicked();
 };
 
 #endif // FONTBUILDER_H
