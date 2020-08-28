@@ -5,11 +5,13 @@
 #include <QFile>
 #include <stdint.h>
 
+typedef uint32_t ucode32;
+
 class FontGlyph
 {
 public:
     //character id
-    uint16_t id;
+    ucode32 id;
     //offset in glyph data field
     uint32_t glyph_offset;
     //width of the character image in the texture
@@ -24,7 +26,7 @@ public:
     uint16_t xadvance;
 
     void load( QFile& file) {
-        file.read( reinterpret_cast<char*>(&id), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&id), sizeof(ucode32));
         file.read( reinterpret_cast<char*>(&glyph_offset), sizeof(uint32_t));
         file.read( reinterpret_cast<char*>(&width), sizeof(uint16_t));
         file.read( reinterpret_cast<char*>(&height), sizeof(uint16_t));
@@ -34,7 +36,7 @@ public:
     }
 
     void save( QByteArray& out ) {
-        out.append( reinterpret_cast<char*>(&id), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&id), sizeof(ucode32));
         out.append( reinterpret_cast<char*>(&glyph_offset), sizeof(uint32_t));
         out.append( reinterpret_cast<char*>(&width), sizeof(uint16_t));
         out.append( reinterpret_cast<char*>(&height), sizeof(uint16_t));
@@ -44,7 +46,7 @@ public:
     }
 
     static uint32_t getSize() {
-        return 4*sizeof (uint16_t) + 2*sizeof (int16_t) + sizeof(uint32_t);
+        return sizeof (ucode32) + sizeof(uint32_t) + 5*sizeof (int16_t);
     }
 };
 
@@ -52,26 +54,26 @@ class FontKerning
 {
 public:
     //utf16 id of the first character
-    uint16_t first;
+    ucode32 first;
     //utf16 id of the following character
-    uint16_t second;
+    ucode32 second;
     //distance in pixels between beginning of first character and beginning of second character
     int16_t amount;
 
     void load( QFile& file) {
-        file.read( reinterpret_cast<char*>(&first), sizeof(uint16_t));
-        file.read( reinterpret_cast<char*>(&second), sizeof(uint16_t));
+        file.read( reinterpret_cast<char*>(&first), sizeof(ucode32));
+        file.read( reinterpret_cast<char*>(&second), sizeof(ucode32));
         file.read( reinterpret_cast<char*>(&amount), sizeof(uint16_t));
     }
 
     void save( QByteArray& out ) {
-        out.append( reinterpret_cast<char*>(&first), sizeof(uint16_t));
-        out.append( reinterpret_cast<char*>(&second), sizeof(uint16_t));
+        out.append( reinterpret_cast<char*>(&first), sizeof(ucode32));
+        out.append( reinterpret_cast<char*>(&second), sizeof(ucode32));
         out.append( reinterpret_cast<char*>(&amount), sizeof(int16_t));
     }
 
     static uint32_t getSize() {
-        return 3*sizeof (uint16_t);
+        return 2 * sizeof(ucode32) + sizeof (uint16_t);
     }
 };
 
