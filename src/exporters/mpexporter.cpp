@@ -3,8 +3,6 @@
 #include "../fontconfig.h"
 #include "../mpcommon.h"
 
-typedef uint32_t ucode32;
-
 #pragma pack(1)
 
 
@@ -85,7 +83,7 @@ bool MPExporter::Export(QByteArray &out)
         FontGlyph glyph;
 
         //character id
-        glyph.id = static_cast<ucode32>(c.id);
+        glyph.id = static_cast<uint16_t>(c.id);
         //offset in glyph data field
         glyph.glyph_offset = font_img.image_data_offset+offset;
         //width of the character image in the texture
@@ -116,9 +114,9 @@ bool MPExporter::Export(QByteArray &out)
         for (Kerning k = c.kerning.begin(); k != c.kerning.end(); k++)
         {
             //utf16 id of the first character
-            kern.first = static_cast<ucode32>(c.id);
+            kern.first = static_cast<uint16_t>(c.id);
             //utf16 id of the following character
-            kern.second = static_cast<ucode32>(k.key());
+            kern.second = static_cast<uint16_t>(k.key());
             //distance in pixels between beginning of first character and beginning of second character
             kern.amount = static_cast<int16_t>(k.value());
             //write to file
